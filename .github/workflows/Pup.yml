@@ -1,0 +1,67 @@
+name: Remote Desktop GitHub Action
+
+on: 
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tmate xfce4 xrdp
+
+    - name: Setup tmate session
+      run: |
+        tmate -S /tmp/tmate.sock new-session -d &               
+        sleep 10
+        TMATE_SSH=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')         
+        echo "::set-output name=tmate_ssh::$TMATE_SSH"
+        TMATE_WEB=$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')       
+        echo "::set-output name=tmate_web::$TMATE_WEB"
+      id: tmate
+
+    - name: Show tmate connection details
+      run: |
+        echo "SSH connection: ${{ steps.tmate.outputs.tmate_ssh }}"
+        echo "Web connection: ${{ steps.tmate.outputs.tmate_web }}"
+
+    - name: Setup xrdp
+      run: |
+        sudo /etc/init.d/xrdp start
+
+    - name: Install ngrok
+      run: |
+        curl -s https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip > ngrok.zip
+        unzip ngrok.zip
+        chmod +x ./ngrok
+
+    - name: Start ngrok tunnel
+      run: |
+        ./ngrok authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+        ./ngrok tcp 3389 &
+        sleep 10
+        curl http://localhost:4040/api/tunnels > tunnels.json
+        echo "::set-output name=ngrok_url::$(cat tunnels.json | jq -r .tunnels[0].public_url)"
+      id: ngrok
+
+    - name: Show ngrok connection details
+      run: |
+        echo "RDP connection: ${{ steps.ngrok.outputs.ngrok_url }}"
+
+    - name: Keep Action running
+      run: |
+        while true; do
+          echo "Keeping GitHub Action running..."
+          sleep 300
+        done

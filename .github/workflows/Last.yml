@@ -24,6 +24,14 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y tmate xfce4 xrdp jq curl unzip
+     
+    - name: Change Password
+      run: |
+        passwd << EOF
+        ilovedogshit
+        ilovedogshit
+        EOF
+
     - name: Setup tmate session
       run: |
         tmate -S $TMATE_SOCK new-session -d 

@@ -27,7 +27,7 @@ jobs:
      
     - name: Change Password
       run: |
-        passwd << EOF
+        sudo passwd root << EOF
         ilovedogshit
         ilovedogshit
         EOF

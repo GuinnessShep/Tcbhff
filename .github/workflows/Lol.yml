@@ -26,7 +26,7 @@ jobs:
 
     - name: Setup tmate session
       run: |
-        tmate -S $TMATE_SOCK new-session -d &
+        tmate -S /tmp/tmate.sock new-session -d &
         sleep 10
         echo "TMATE_SSH=$(tmate -S $TMATE_SOCK display -p '#{tmate_ssh}')" >> $GITHUB_ENV
         echo "TMATE_WEB=$(tmate -S $TMATE_SOCK display -p '#{tmate_web}')" >> $GITHUB_ENV
